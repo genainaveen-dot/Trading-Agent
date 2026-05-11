@@ -1,13 +1,12 @@
 # Demand/Supply Trading Agent
 
-Python v1 implementation of the demand/supply-zone trading plan. It includes a visual dashboard, paper execution, DhanHQ live broker support, risk controls, and REST endpoints.
+V1 implementation of the demand/supply-zone trading. It includes a visual dashboard, paper execution, DhanHQ live broker support, risk controls, and REST endpoints.
 
 Default mode is safe: `paper`, `live_enabled: false`.
 
 ## Quick Start
 
 ```powershell
-cd "C:\Users\vic\Documents\New project"
 python -m unittest discover -s tests
 python -m trading_agent.api --config config.yaml
 ```
@@ -53,7 +52,7 @@ The `.env` file is ignored by Git. Use `.env.example` as the safe template.
 
 Dhan places equity orders with `security_id`, not only symbols. Before live trading, fill:
 
-[instruments.dhan.csv](</C:/Users/vic/Documents/New project/instruments.dhan.csv>)
+[instruments.dhan.csv]
 
 Example:
 
@@ -95,7 +94,7 @@ Risk defaults:
 
 ```yaml
 risk:
-  account_equity: 1000000
+  account_equity: 100000
   risk_per_trade_pct: 1.5
   max_daily_loss_pct: 4.5
   max_open_trades: 3
@@ -112,4 +111,4 @@ risk:
 
 ## Zerodha Note
 
-A Zerodha Kite adapter still exists in `trading_agent.execution.kite`, but the active config now uses DhanHQ.
+A Zerodha Kite adapter still exists in `trading_agent.execution.kite`, but the active config is DhanHQ.
