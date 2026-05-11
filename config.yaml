@@ -1,0 +1,32 @@
+mode: paper
+live_enabled: false
+timeframe_preset: swing
+watchlist_path: watchlist.txt
+env_file: .env
+
+broker:
+  name: dhan
+  client_id_env: DHAN_CLIENT_ID
+  access_token_env: DHAN_ACCESS_TOKEN
+  instrument_map_path: instruments.dhan.csv
+  api_key_env: KITE_API_KEY
+
+risk:
+  account_equity: 1000000
+  risk_per_trade_pct: 1.5
+  max_daily_loss_pct: 4.5
+  max_open_trades: 3
+  stop_buffer_pct: 0.05
+  max_slippage_pct: 0.15
+  tick_size: 0.05
+
+strategy:
+  target_r_multiple: 2
+  sma_period: 50
+  trend_lookback: 7
+  max_base_candles: 6
+  freshness_touch_limit: 2
+
+api:
+  host: 127.0.0.1
+  port: 8080

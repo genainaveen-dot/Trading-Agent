@@ -1,0 +1,14 @@
+[project]
+name = "demand-supply-trading-agent"
+version = "0.1.0"
+description = "Automated Indian equities trading agent based on demand/supply zone rules."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+live = ["dhanhq>=2.1.0", "kiteconnect>=5.0.0", "PyYAML>=6.0.0"]
+dev = ["pytest>=8.0.0", "PyYAML>=6.0.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
