@@ -1,0 +1,5 @@
+symbol,security_id,exchange_segment
+CRUDEOIL,,MCX_COMM
+GOLD,,MCX_COMM
+SILVER,,MCX_COMM
+NATURALGAS,,MCX_COMM

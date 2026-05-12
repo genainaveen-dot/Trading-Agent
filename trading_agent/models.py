@@ -43,6 +43,11 @@ class EntryType(str, Enum):
     CONFIRMATION_LEAVE_ZONE = "type_3_leave_zone"
 
 
+class MarketSegment(str, Enum):
+    EQUITY = "equity"
+    COMMODITY = "commodity"
+
+
 @dataclass(frozen=True)
 class Candle:
     symbol: str
@@ -124,6 +129,22 @@ class TradeSignal:
     timeframe_preset: str
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     reason: str = ""
+
+
+@dataclass(frozen=True)
+class SwingAlert:
+    symbol: str
+    market_segment: MarketSegment
+    direction: Direction
+    entry: float
+    stop_loss: float
+    target: float
+    score: float
+    pattern: str
+    trend: TrendState
+    curve: CurveState
+    message: str
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass(frozen=True)

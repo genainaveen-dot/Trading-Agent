@@ -15,10 +15,19 @@ Open the dashboard:
 
 [http://127.0.0.1:8080/](http://127.0.0.1:8080/)
 
+Dashboard tabs:
+
+- Equity: NSE watchlist and equity swing signals.
+- Commodity: MCX watchlist and commodity swing alerts.
+- Swing Alerts: all generated swing alerts.
+- Orders & Risk: order events and active risk controls.
+
 Useful JSON endpoints:
 
 - `GET /health`
 - `GET /signals`
+- `GET /alerts`
+- `GET /watchlists`
 - `GET /positions`
 - `GET /orders`
 - `GET /risk`
@@ -64,6 +73,31 @@ TCS,11536,NSE_EQ
 
 Do not guess `security_id` values. Verify them from Dhan’s instrument master or DhanHQ documentation/account tools.
 
+For commodities, fill:
+
+[instruments.dhan.commodity.csv](</C:/Users/vic/Documents/New project/instruments.dhan.commodity.csv>)
+
+Example:
+
+```csv
+symbol,security_id,exchange_segment
+CRUDEOIL,real_dhan_security_id,MCX_COMM
+GOLD,real_dhan_security_id,MCX_COMM
+```
+
+Commodity symbols are listed in:
+
+[watchlist.commodity.txt](</C:/Users/vic/Documents/New project/watchlist.commodity.txt>)
+
+## Swing Alerts
+
+The swing alert agent converts valid demand/supply swing signals into alerts for Dhan symbols. Alerts are non-execution notifications and are visible in:
+
+- dashboard tab: `Swing Alerts`
+- API endpoint: `GET /alerts`
+
+Commodity alerts are also shown in the `Commodity` tab. The current v1 stores the latest 100 alerts in memory while the API process is running.
+
 ## Live Trading Gate
 
 Live orders are blocked unless all are true:
@@ -106,6 +140,7 @@ risk:
 - `trading_agent.risk`: position sizing and trade rejection.
 - `trading_agent.execution.dhan`: DhanHQ live order adapter.
 - `trading_agent.execution.paper`: safe paper execution adapter.
+- `trading_agent.alerts`: Dhan swing alert generator.
 - `trading_agent.api`: dashboard and REST status/control API.
 - `tests`: unit coverage for strategy, risk, paper execution, and Dhan adapter behavior.
 

@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from threading import Lock
 from typing import Any
 
-from trading_agent.models import OrderPlan, PositionState, RiskDecision, TradeSignal
+from trading_agent.models import OrderPlan, PositionState, RiskDecision, SwingAlert, TradeSignal
 from trading_agent.utils import to_jsonable
 
 
@@ -29,6 +29,7 @@ class AgentState:
     signals: list[TradeSignal] = field(default_factory=list)
     positions: list[PositionState] = field(default_factory=list)
     orders: list[dict[str, Any]] = field(default_factory=list)
+    alerts: list[SwingAlert] = field(default_factory=list)
     risk_decisions: list[RiskDecision] = field(default_factory=list)
     audit_log: list[dict[str, Any]] = field(default_factory=list)
     lock: Lock = field(default_factory=Lock)
@@ -44,6 +45,11 @@ class AgentState:
             self.orders.append(event)
             self._audit("order", event)
 
+    def add_alert(self, alert: SwingAlert) -> None:
+        with self.lock:
+            self.alerts.append(alert)
+            self._audit("alert", to_jsonable(alert))
+
     def add_risk_decision(self, decision: RiskDecision) -> None:
         with self.lock:
             self.risk_decisions.append(decision)
@@ -58,6 +64,7 @@ class AgentState:
                 "signals": to_jsonable(self.signals[-100:]),
                 "positions": to_jsonable(self.positions),
                 "orders": to_jsonable(self.orders[-100:]),
+                "alerts": to_jsonable(self.alerts[-100:]),
                 "risk_decisions": to_jsonable(self.risk_decisions[-100:]),
                 "audit_log": to_jsonable(self.audit_log[-100:]),
             }
@@ -65,7 +72,7 @@ class AgentState:
     def _audit(self, event_type: str, payload: Any) -> None:
         self.audit_log.append(
             {
-                    "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "event_type": event_type,
                 "payload": payload,
             }

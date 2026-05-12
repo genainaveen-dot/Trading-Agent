@@ -32,6 +32,17 @@ class AgentApiHandler(BaseHTTPRequestHandler):
             )
         elif path == "/signals":
             self._send(snapshot["signals"])
+        elif path == "/alerts":
+            self._send(snapshot["alerts"])
+        elif path == "/watchlists":
+            self._send(
+                {
+                    "equity": load_watchlist(self.agent.config.watchlist_path),
+                    "commodity": load_watchlist(self.agent.config.commodity_watchlist_path),
+                    "equity_instrument_map": self.agent.config.broker.instrument_map_path,
+                    "commodity_instrument_map": self.agent.config.broker.commodity_instrument_map_path,
+                }
+            )
         elif path == "/positions":
             self._send(snapshot["positions"])
         elif path == "/orders":

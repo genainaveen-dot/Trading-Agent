@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from trading_agent.alerts import SwingAlertAgent
 from trading_agent.config import AppConfig
 from trading_agent.execution.base import ExecutionAdapter
 from trading_agent.execution.dhan import DhanExecutionAdapter
 from trading_agent.execution.kite import KiteExecutionAdapter
 from trading_agent.execution.paper import PaperExecutionAdapter
-from trading_agent.models import Candle, PositionState, TIMEFRAME_PRESETS
+from trading_agent.models import Candle, MarketSegment, PositionState, TIMEFRAME_PRESETS
 from trading_agent.monitoring import AgentState
 from trading_agent.risk import RiskManager
 from trading_agent.strategy.engine import StrategyEngine
@@ -21,6 +22,7 @@ class TradingAgent:
         self.config = config
         self.state = state or AgentState(mode=config.mode, live_enabled=config.live_enabled)
         self.strategy = StrategyEngine(config.strategy)
+        self.alerts = SwingAlertAgent()
         self.risk = RiskManager(config.risk)
         self.execution = execution or self._build_execution_adapter()
 
@@ -31,6 +33,7 @@ class TradingAgent:
         itf_candles: list[Candle],
         ltf_candles: list[Candle],
         last_price: float | None = None,
+        market_segment: MarketSegment = MarketSegment.EQUITY,
     ) -> None:
         preset = TIMEFRAME_PRESETS[self.config.timeframe_preset]
         signals = self.strategy.generate_signals(
@@ -42,6 +45,8 @@ class TradingAgent:
         )
         for signal in signals:
             self.state.add_signal(signal)
+            if preset.name == "swing" and self.config.broker.name.lower() == "dhan":
+                self.state.add_alert(self.alerts.build_alert(signal, market_segment))
             decision = self.risk.evaluate(
                 signal,
                 open_positions=self.state.positions,

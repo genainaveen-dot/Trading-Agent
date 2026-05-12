@@ -13,6 +13,7 @@ class BrokerConfig:
     client_id_env: str = "DHAN_CLIENT_ID"
     access_token_env: str = "KITE_ACCESS_TOKEN"
     instrument_map_path: str = "instruments.dhan.csv"
+    commodity_instrument_map_path: str = "instruments.dhan.commodity.csv"
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,7 @@ class AppConfig:
     live_enabled: bool = False
     timeframe_preset: str = "swing"
     watchlist_path: str = "watchlist.txt"
+    commodity_watchlist_path: str = "watchlist.commodity.txt"
     env_file: str = ".env"
     broker: BrokerConfig = BrokerConfig()
     risk: RiskConfig = RiskConfig()
@@ -64,6 +66,7 @@ def load_config(path: str | Path = "config.yaml") -> AppConfig:
         live_enabled=bool(raw.get("live_enabled", False)),
         timeframe_preset=str(raw.get("timeframe_preset", "swing")),
         watchlist_path=str(raw.get("watchlist_path", "watchlist.txt")),
+        commodity_watchlist_path=str(raw.get("commodity_watchlist_path", "watchlist.commodity.txt")),
         env_file=env_file,
         broker=BrokerConfig(**_section(raw, "broker")),
         risk=RiskConfig(**_section(raw, "risk")),

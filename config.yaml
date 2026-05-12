@@ -2,6 +2,7 @@ mode: paper
 live_enabled: false
 timeframe_preset: swing
 watchlist_path: watchlist.txt
+commodity_watchlist_path: watchlist.commodity.txt
 env_file: .env
 
 broker:
@@ -9,6 +10,7 @@ broker:
   client_id_env: DHAN_CLIENT_ID
   access_token_env: DHAN_ACCESS_TOKEN
   instrument_map_path: instruments.dhan.csv
+  commodity_instrument_map_path: instruments.dhan.commodity.csv
   api_key_env: KITE_API_KEY
 
 risk:

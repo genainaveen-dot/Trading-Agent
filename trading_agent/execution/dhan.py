@@ -32,7 +32,11 @@ class DhanExecutionAdapter(ExecutionAdapter):
                 f"Dhan credentials are missing. Set {config.client_id_env} and "
                 f"{config.access_token_env} in .env or PowerShell."
             )
-        self.instruments = instruments or load_dhan_instruments(config.instrument_map_path)
+        if instruments is None:
+            self.instruments = load_dhan_instruments(config.instrument_map_path)
+            self.instruments.update(load_dhan_instruments(config.commodity_instrument_map_path))
+        else:
+            self.instruments = instruments
         self.dhan = client or self._build_client()
 
     def place_entry_order(self, plan: OrderPlan) -> dict[str, Any]:
