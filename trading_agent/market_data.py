@@ -1,11 +1,64 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
+
+import yfinance as yf
 
 from trading_agent.config import BrokerConfig
 from trading_agent.models import Candle
+
+
+class YFinanceMarketDataClient:
+    """Free market data client using yfinance."""
+
+    def fetch_historical(
+        self,
+        symbol: str,
+        from_date: datetime,
+        to_date: datetime,
+        interval: str,
+    ) -> list[Candle]:
+        # Map internal intervals to yfinance intervals
+        interval_map = {
+            "1min": "1m",
+            "5min": "5m",
+            "15min": "15m",
+            "30min": "30m",
+            "1hour": "1h",
+            "1day": "1d",
+            "1week": "1wk",
+            "1month": "1mo",
+        }
+        yf_interval = interval_map.get(interval, interval)
+
+        ticker = yf.Ticker(f"{symbol}.NS" if not symbol.endswith((".NS", ".BO")) else symbol)
+        df = ticker.history(start=from_date, end=to_date, interval=yf_interval)
+
+        candles = []
+        for _, row in df.iterrows():
+            candles.append(
+                Candle(
+                    symbol=symbol.upper(),
+                    timestamp=row.name.to_pydatetime(),
+                    open=float(row["Open"]),
+                    high=float(row["High"]),
+                    low=float(row["Low"]),
+                    close=float(row["Close"]),
+                    volume=int(row["Volume"]),
+                    interval=interval,
+                )
+            )
+        return candles
+
+    def fetch_latest(self, symbol: str) -> float | None:
+        ticker = yf.Ticker(f"{symbol}.NS" if not symbol.endswith((".NS", ".BO")) else symbol)
+        try:
+            info = ticker.fast_info
+            return float(info.last_price) if info.last_price else None
+        except Exception:
+            return None
 
 
 class KiteMarketDataClient:

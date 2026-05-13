@@ -31,6 +31,7 @@ class StrategyEngine:
         itf_candles: Sequence[Candle],
         ltf_candles: Sequence[Candle],
         timeframe_preset: str,
+        allow_short: bool = True,
     ) -> list[TradeSignal]:
         if not ltf_candles:
             return []
@@ -58,7 +59,7 @@ class StrategyEngine:
             )
             if signal is None:
                 continue
-            if signal.direction == Direction.SHORT and not preset.allow_short:
+            if signal.direction == Direction.SHORT and not allow_short:
                 continue
             signals.append(signal)
         return signals

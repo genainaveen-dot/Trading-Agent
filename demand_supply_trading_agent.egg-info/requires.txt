@@ -1,0 +1,9 @@
+
+[dev]
+pytest>=8.0.0
+PyYAML>=6.0.0
+
+[live]
+dhanhq>=2.1.0
+kiteconnect>=5.0.0
+PyYAML>=6.0.0

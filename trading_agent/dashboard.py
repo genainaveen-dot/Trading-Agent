@@ -68,6 +68,57 @@ DASHBOARD_HTML = """<!doctype html>
     .button:hover { border-color: #b9c4d3; }
     .button.danger { color: #ffffff; background: var(--red); border-color: var(--red); }
     .button.safe { color: #ffffff; background: var(--green); border-color: var(--green); }
+    .button.primary { color: #ffffff; background: var(--blue); border-color: var(--blue); }
+    .button.primary:hover { background: #1d4a9b; }
+
+    .symbol-select {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 8px 12px;
+      font-size: 13px;
+      min-width: 180px;
+    }
+
+    .watchlist-filter-select {
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 4px 8px;
+      font-size: 12px;
+      max-width: 140px;
+    }
+
+    .scan-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .scan-result {
+      display: none;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .scan-result.show { display: block; }
+    .scan-result.success { border-left: 4px solid var(--green); }
+    .scan-result.error { border-left: 4px solid var(--red); }
+    .scan-result .signal-details { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--soft-line); }
+    .scan-result .signal-row { display: flex; justify-content: space-between; padding: 4px 0; }
+    .scan-result .signal-label { color: var(--muted); }
+    .scan-result .signal-value { font-weight: 600; }
 
     .grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 12px; }
     .metric, .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); }
@@ -126,6 +177,12 @@ DASHBOARD_HTML = """<!doctype html>
     .risk-row, .symbol-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--panel); padding: 12px 14px; font-size: 13px; }
     .risk-row span, .symbol-row span { color: var(--muted); }
     .risk-row strong, .symbol-row strong { font-size: 13px; text-align: right; }
+    .symbol-row.active-filter { background: #eaf0ff; border-left: 3px solid var(--blue); }
+    .filter-clear { cursor: pointer; color: var(--muted); font-size: 12px; margin-left: 8px; padding: 2px 6px; border-radius: 4px; }
+    .filter-clear:hover { background: #d0e0ff; color: var(--blue); }
+    .filter-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--blue); color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; margin-bottom: 8px; }
+    .filter-badge .clear { cursor: pointer; opacity: 0.8; }
+    .filter-badge .clear:hover { opacity: 1; }
     .mono { font-family: "Cascadia Mono", Consolas, monospace; }
 
     @media (max-width: 980px) {
@@ -148,6 +205,7 @@ DASHBOARD_HTML = """<!doctype html>
       <nav class="nav" aria-label="Dashboard tabs">
         <button class="active" data-tab="equity" type="button">Equity</button>
         <button data-tab="commodity" type="button">Commodity</button>
+        <button data-tab="index" type="button">Index</button>
         <button data-tab="alerts" type="button">Swing Alerts</button>
         <button data-tab="orders" type="button">Orders & Risk</button>
       </nav>
@@ -174,19 +232,41 @@ DASHBOARD_HTML = """<!doctype html>
       </section>
 
       <section class="tab-page active" id="tab-equity">
+        <div class="scan-toolbar">
+          <select id="equity-symbol-select" class="symbol-select">
+            <option value="">Select Equity Symbol</option>
+          </select>
+          <button class="button primary" id="equity-scan" type="button">Run Scan</button>
+        </div>
+        <div class="scan-result" id="equity-scan-result"></div>
         <div class="section-grid">
           <div class="panel">
             <div class="panel-header"><h3>Equity Signals</h3><span>NSE swing setup stream</span></div>
             <div id="equity-signals-body"></div>
           </div>
           <div class="panel">
-            <div class="panel-header"><h3>Equity Watchlist</h3><span id="equity-map-path">Dhan map</span></div>
+            <div class="panel-header">
+              <h3>Equity Watchlist</h3>
+              <div>
+                <select id="equity-watchlist-filter" class="watchlist-filter-select" onchange="filterEquityBySymbol(this.value)">
+                  <option value="">All Symbols</option>
+                </select>
+                <span id="equity-map-path">Dhan map</span>
+              </div>
+            </div>
             <div class="symbol-list" id="equity-watchlist-body"></div>
           </div>
         </div>
       </section>
 
       <section class="tab-page" id="tab-commodity">
+        <div class="scan-toolbar">
+          <select id="commodity-symbol-select" class="symbol-select">
+            <option value="">Select Commodity Symbol</option>
+          </select>
+          <button class="button primary" id="commodity-scan" type="button">Run Scan</button>
+        </div>
+        <div class="scan-result" id="commodity-scan-result"></div>
         <div class="section-grid">
           <div class="panel">
             <div class="panel-header"><h3>Commodity Alerts</h3><span>MCX swing alert stream</span></div>
@@ -199,9 +279,38 @@ DASHBOARD_HTML = """<!doctype html>
         </div>
       </section>
 
+      <section class="tab-page" id="tab-index">
+        <div class="scan-toolbar">
+          <select id="index-symbol-select" class="symbol-select">
+            <option value="">Select Index Symbol</option>
+          </select>
+          <button class="button primary" id="index-scan" type="button">Run Scan</button>
+        </div>
+        <div class="scan-result" id="index-scan-result"></div>
+        <div class="section-grid">
+          <div class="panel">
+            <div class="panel-header"><h3>Index Signals</h3><span>NSE index swing setup stream</span></div>
+            <div id="index-signals-body"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>Index Watchlist</h3><span>Nifty, BankNifty, Finnifty</span></div>
+            <div class="symbol-list" id="index-watchlist-body"></div>
+          </div>
+        </div>
+      </section>
+
       <section class="tab-page" id="tab-alerts">
         <div class="panel">
-          <div class="panel-header"><h3>Swing Trading Alerts</h3><span>Generated from demand/supply signals</span></div>
+          <div class="panel-header">
+            <h3>Swing Trading Alerts</h3>
+            <div>
+              <select id="alerts-filter" class="watchlist-filter-select" onchange="filterAlertsBySegment(this.value)">
+                <option value="">All Segments</option>
+                <option value="equity">Equity</option>
+                <option value="commodity">Commodity</option>
+              </select>
+            </div>
+          </div>
           <div id="alerts-body"></div>
         </div>
       </section>
@@ -265,20 +374,145 @@ DASHBOARD_HTML = """<!doctype html>
       $("kill").textContent = kill.enabled ? "Resume Agent" : "Kill Switch";
       $("kill").className = kill.enabled ? "button safe" : "button danger";
 
-      renderSignals(signals.filter((signal) => !signal.market_segment || signal.market_segment === "equity"), "equity-signals-body");
-      renderAlerts(alerts, "alerts-body");
-      renderAlerts(alerts.filter((alert) => alert.market_segment === "commodity"), "commodity-alerts-body");
-      renderWatchlist(watchlists.equity || [], "equity-watchlist-body");
-      renderWatchlist(watchlists.commodity || [], "commodity-watchlist-body");
+      const equitySignals = getFilteredSignals(signals.filter((signal) => !signal.market_segment || signal.market_segment === "equity"), "equity");
+      const commodityAlerts = getFilteredAlerts(alerts.filter((alert) => alert.market_segment === "commodity"), "commodity");
+      const indexSignals = getFilteredSignals(signals.filter((signal) => signal.market_segment === "index"), "index");
+
+      // Filter alerts for alerts tab
+      let filteredAlerts = alerts;
+      if (filters.alerts) {
+        filteredAlerts = alerts.filter(a => a.market_segment === filters.alerts);
+      }
+
+      renderSignals(equitySignals, "equity-signals-body", "equity");
+      renderAlerts(filteredAlerts, "alerts-body");
+      renderAlerts(commodityAlerts, "commodity-alerts-body", "commodity");
+      renderSignals(indexSignals, "index-signals-body", "index");
+      renderWatchlist(watchlists.equity || [], "equity-watchlist-body", "equity");
+      renderWatchlist(watchlists.commodity || [], "commodity-watchlist-body", "commodity");
+      renderWatchlist(watchlists.index || [], "index-watchlist-body", "index");
       $("equity-map-path").textContent = watchlists.equity_instrument_map || "";
       $("commodity-map-path").textContent = watchlists.commodity_instrument_map || "";
       renderOrders(orders);
       renderRisk(risk, kill, positions);
+
+      // Restore filter dropdown selected values
+      if (filters.equity) {
+        $("equity-watchlist-filter").value = filters.equity;
+      }
+      if (filters.alerts) {
+        $("alerts-filter").value = filters.alerts;
+      }
+
+      // Populate equity symbol select
+      const equitySelect = $("equity-symbol-select");
+      equitySelect.innerHTML = '<option value="">Select Equity Symbol</option>';
+      (watchlists.equity || []).forEach(sym => {
+        const opt = document.createElement("option");
+        opt.value = sym;
+        opt.textContent = sym;
+        equitySelect.appendChild(opt);
+      });
+
+      // Populate equity watchlist filter dropdown
+      const equityWatchlistFilter = $("equity-watchlist-filter");
+      equityWatchlistFilter.innerHTML = '<option value="">All Symbols</option>';
+      (watchlists.equity || []).forEach(sym => {
+        const opt = document.createElement("option");
+        opt.value = sym;
+        opt.textContent = sym;
+        equityWatchlistFilter.appendChild(opt);
+      });
+
+      // Populate commodity symbol select
+      const commoditySelect = $("commodity-symbol-select");
+      commoditySelect.innerHTML = '<option value="">Select Commodity Symbol</option>';
+      (watchlists.commodity || []).forEach(sym => {
+        const opt = document.createElement("option");
+        opt.value = sym;
+        opt.textContent = sym;
+        commoditySelect.appendChild(opt);
+      });
+
+      // Populate index symbol select
+      const indexSelect = $("index-symbol-select");
+      indexSelect.innerHTML = '<option value="">Select Index Symbol</option>';
+      (watchlists.index || []).forEach(sym => {
+        const opt = document.createElement("option");
+        opt.value = sym;
+        opt.textContent = sym;
+        indexSelect.appendChild(opt);
+      });
     }
 
-    function renderSignals(signals, targetId) {
+    // Run Scan handlers for each tab
+    function setupScanHandler(tabId, selectId, buttonId, resultId) {
+      const select = $(selectId);
+      const button = $(buttonId);
+      const result = $(resultId);
+
+      button.addEventListener("click", async () => {
+        const symbol = select.value;
+        if (!symbol) {
+          result.className = "scan-result show error";
+          result.innerHTML = "Please select a symbol first";
+          return;
+        }
+        button.textContent = "Scanning...";
+        button.disabled = true;
+        result.className = "scan-result show";
+        result.innerHTML = "Scanning " + symbol + "...";
+        try {
+          const res = await fetch("/scan-symbol", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ symbol })
+          });
+          const data = await res.json();
+          if (data.error) {
+            result.className = "scan-result show error";
+            result.innerHTML = "Error: " + data.error;
+          } else {
+            result.className = "scan-result show success";
+            const signalCount = data.signals || 0;
+            result.innerHTML = `<strong>Scan Complete: ${signalCount} signals found for ${symbol}</strong>`;
+            if (signalCount > 0) {
+              // Get latest signals and show details
+              fetch("/signals").then(r => r.json()).then(allSignals => {
+                const symSignals = allSignals.filter(s => s.symbol === symbol).slice(-3);
+                if (symSignals.length > 0) {
+                  let detailsHtml = '<div class="signal-details">';
+                  symSignals.forEach(sig => {
+                    detailsHtml += `<div class="signal-row">
+                      <span class="signal-label">${sig.direction.toUpperCase()} @ ${fmt.format(sig.entry)}</span>
+                      <span class="signal-value">SL: ${fmt.format(sig.stop_loss)} | TGT: ${fmt.format(sig.target)}</span>
+                    </div>`;
+                  });
+                  detailsHtml += '</div>';
+                  result.innerHTML += detailsHtml;
+                }
+              });
+            }
+          }
+          loadDashboard();
+        } catch (e) {
+          result.className = "scan-result show error";
+          result.innerHTML = "Scan failed: " + e.message;
+        } finally {
+          button.textContent = "Run Scan";
+          button.disabled = false;
+        }
+      });
+    }
+
+    setupScanHandler("tab-equity", "equity-symbol-select", "equity-scan", "equity-scan-result");
+    setupScanHandler("tab-commodity", "commodity-symbol-select", "commodity-scan", "commodity-scan-result");
+    setupScanHandler("tab-index", "index-symbol-select", "index-scan", "index-scan-result");
+
+    function renderSignals(signals, targetId, section) {
+      const filterBadge = section ? renderFilterBadge(section) : '';
       if (!signals.length) {
-        $(targetId).innerHTML = `<div class="empty">No signals recorded yet. The swing alert agent will populate this after scans.</div>`;
+        $(targetId).innerHTML = filterBadge + `<div class="empty">No signals recorded yet. The swing alert agent will populate this after scans.</div>`;
         return;
       }
       const rows = signals.slice(-12).reverse().map((signal) => `
@@ -289,12 +523,13 @@ DASHBOARD_HTML = """<!doctype html>
           <td>${money.format(signal.entry)}<br><span>SL ${money.format(signal.stop_loss)}</span></td>
           <td>${money.format(signal.target)}<br><span>${escapeHtml(signal.curve)}</span></td>
         </tr>`).join("");
-      $(targetId).innerHTML = `<table><thead><tr><th>Symbol</th><th>Side</th><th>Score</th><th>Entry</th><th>Target</th></tr></thead><tbody>${rows}</tbody></table>`;
+      $(targetId).innerHTML = filterBadge + `<table><thead><tr><th>Symbol</th><th>Side</th><th>Score</th><th>Entry</th><th>Target</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
 
-    function renderAlerts(alerts, targetId) {
+    function renderAlerts(alerts, targetId, section) {
+      const filterBadge = section ? renderFilterBadge(section) : '';
       if (!alerts.length) {
-        $(targetId).innerHTML = `<div class="empty">No swing alerts yet.</div>`;
+        $(targetId).innerHTML = filterBadge + `<div class="empty">No swing alerts yet.</div>`;
         return;
       }
       const rows = alerts.slice(-20).reverse().map((alert) => `
@@ -305,17 +540,66 @@ DASHBOARD_HTML = """<!doctype html>
           <td>${money.format(alert.entry)}<br><span>SL ${money.format(alert.stop_loss)}</span></td>
           <td>${escapeHtml(alert.message)}</td>
         </tr>`).join("");
-      $(targetId).innerHTML = `<table><thead><tr><th>Symbol</th><th>Setup</th><th>Score</th><th>Price</th><th>Message</th></tr></thead><tbody>${rows}</tbody></table>`;
+      $(targetId).innerHTML = filterBadge + `<table><thead><tr><th>Symbol</th><th>Setup</th><th>Score</th><th>Price</th><th>Message</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
 
-    function renderWatchlist(symbols, targetId) {
+    // Filter state for each section
+    const filters = { equity: null, commodity: null, index: null, alerts: null };
+
+    function renderWatchlist(symbols, targetId, section) {
       if (!symbols.length) {
         $(targetId).innerHTML = `<div class="empty">No symbols configured.</div>`;
         return;
       }
+      const currentFilter = filters[section];
       $(targetId).innerHTML = symbols.map((symbol, index) => `
-        <div class="symbol-row"><span>${index + 1}</span><strong>${escapeHtml(symbol)}</strong></div>
+        <div class="symbol-row ${currentFilter === symbol ? 'active-filter' : ''}" onclick="filterBySymbol(&quot;${section}&quot;, &quot;${escapeHtml(symbol)}&quot;)" style="cursor:pointer">
+          <span>${index + 1}</span><strong>${escapeHtml(symbol)}</strong>
+          ${currentFilter === symbol ? '<span class="filter-clear" onclick="event.stopPropagation(); clearFilter(&quot;' + section + '&quot;)">✕</span>' : ''}
+        </div>
       `).join("");
+    }
+
+    function filterBySymbol(section, symbol) {
+      if (filters[section] === symbol) {
+        clearFilter(section);
+      } else {
+        filters[section] = symbol;
+        loadDashboard();
+      }
+    }
+
+    function filterEquityBySymbol(symbol) {
+      filters.equity = symbol || null;
+      loadDashboard();
+    }
+
+    function clearFilter(section) {
+      filters[section] = null;
+      loadDashboard();
+    }
+
+    function filterAlertsBySegment(segment) {
+      filters.alerts = segment || null;
+      loadDashboard();
+    }
+
+    function getFilteredSignals(allSignals, section) {
+      const filter = filters[section];
+      if (!filter) return allSignals;
+      return allSignals.filter(s => s.symbol === filter);
+    }
+
+    function getFilteredAlerts(allAlerts, section) {
+      const filter = filters[section];
+      if (!filter) return allAlerts;
+      return allAlerts.filter(a => a.symbol === filter);
+    }
+
+    function renderFilterBadge(section) {
+      const filter = filters[section];
+      if (!filter) return '';
+      return `<div class="filter-badge">Filtered: ${escapeHtml(filter)} <span class="clear" onclick="clearFilter(&quot;${section}&quot;)">✕</span></div>`;
     }
 
     function renderOrders(orders) {

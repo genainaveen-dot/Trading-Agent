@@ -46,6 +46,7 @@ class EntryType(str, Enum):
 class MarketSegment(str, Enum):
     EQUITY = "equity"
     COMMODITY = "commodity"
+    INDEX = "index"
 
 
 @dataclass(frozen=True)
@@ -171,6 +172,8 @@ class PositionState:
     product: str
     status: str = "open"
     broker_order_ids: list[str] = field(default_factory=list)
+    realized_pnl: float = 0.0
+    exit_price: float | None = None
 
 
 @dataclass(frozen=True)

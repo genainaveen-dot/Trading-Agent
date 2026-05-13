@@ -1,8 +1,10 @@
 mode: paper
 live_enabled: false
 timeframe_preset: swing
+allow_swing_short: true
 watchlist_path: watchlist.txt
 commodity_watchlist_path: watchlist.commodity.txt
+index_watchlist_path: watchlist.index.txt
 env_file: .env
 
 broker:

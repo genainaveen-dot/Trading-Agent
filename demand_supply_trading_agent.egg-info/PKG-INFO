@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: demand-supply-trading-agent
+Version: 0.1.0
+Summary: Automated Indian equities trading agent based on demand/supply zone rules.
+Requires-Python: >=3.11
+Provides-Extra: live
+Requires-Dist: dhanhq>=2.1.0; extra == "live"
+Requires-Dist: kiteconnect>=5.0.0; extra == "live"
+Requires-Dist: PyYAML>=6.0.0; extra == "live"
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0.0; extra == "dev"
+Requires-Dist: PyYAML>=6.0.0; extra == "dev"

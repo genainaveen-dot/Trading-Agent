@@ -47,8 +47,10 @@ class AppConfig:
     mode: str = "paper"
     live_enabled: bool = False
     timeframe_preset: str = "swing"
+    allow_swing_short: bool = True  # Enable short signals for indices/F&O/commodities
     watchlist_path: str = "watchlist.txt"
     commodity_watchlist_path: str = "watchlist.commodity.txt"
+    index_watchlist_path: str = "watchlist.index.txt"
     env_file: str = ".env"
     broker: BrokerConfig = BrokerConfig()
     risk: RiskConfig = RiskConfig()
@@ -65,8 +67,10 @@ def load_config(path: str | Path = "config.yaml") -> AppConfig:
         mode=str(raw.get("mode", "paper")),
         live_enabled=bool(raw.get("live_enabled", False)),
         timeframe_preset=str(raw.get("timeframe_preset", "swing")),
+        allow_swing_short=bool(raw.get("allow_swing_short", True)),
         watchlist_path=str(raw.get("watchlist_path", "watchlist.txt")),
         commodity_watchlist_path=str(raw.get("commodity_watchlist_path", "watchlist.commodity.txt")),
+        index_watchlist_path=str(raw.get("index_watchlist_path", "watchlist.index.txt")),
         env_file=env_file,
         broker=BrokerConfig(**_section(raw, "broker")),
         risk=RiskConfig(**_section(raw, "risk")),
@@ -100,6 +104,36 @@ def load_watchlist(path: str | Path) -> list[str]:
         if clean and not clean.startswith("#"):
             symbols.append(clean)
     return symbols
+
+
+def load_instrument_map(path: str | Path) -> dict[str, str]:
+    """Load instrument map CSV and return {symbol: security_id}."""
+    instrument_path = Path(path)
+    if not instrument_path.exists():
+        return {}
+    result: dict[str, str] = {}
+    for line in instrument_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or line.startswith("symbol"):
+            continue
+        parts = line.split(",")
+        if len(parts) >= 2:
+            symbol = parts[0].strip().upper()
+            security_id = parts[1].strip()
+            if symbol and security_id:
+                result[symbol] = security_id
+    return result
+
+
+def filter_watchlist_by_instruments(watchlist: list[str], instrument_map: dict[str, str]) -> list[str]:
+    """Filter watchlist to only include symbols that have valid security_ids.
+
+    If instrument_map is empty (not configured), return the full watchlist
+    so the dashboard can still display symbols for viewing alerts.
+    """
+    if not instrument_map:
+        return watchlist
+    return [s for s in watchlist if s in instrument_map]
 
 
 def _resolve_relative(base_file: Path, maybe_relative: str) -> Path:
